@@ -37,7 +37,7 @@ const { Step } = Steps;
 const CallDetailPage = () => {
     const axiosInstance = axios.create({
         //baseURL: 'https://myanmar-ekyc-staging.tunnel.techainer.com/burma',
-        baseURL: 'http://103.23.135.42:5112',
+        baseURL: 'https://api-vkyc.mascom.vn',
     });
     const location = useLocation();
     const [form] = Form.useForm();
@@ -82,7 +82,7 @@ const CallDetailPage = () => {
 
                 const arrayImageFront = arraydataOcrFront.map((item) => {
                     return {
-                        src: `http://103.23.135.42:5112/file/${item.image}`,
+                        src: `https://api-vkyc.mascom.vn/file/${item.image}`,
                         msg: item.response.error ? item.response.error : item.response.msg,
                     };
                 });
@@ -91,7 +91,7 @@ const CallDetailPage = () => {
 
                 const arrayImageBack = arraydataOcrBack.map((item) => {
                     return {
-                        src: `http://103.23.135.42:5112/file/${item.image}`,
+                        src: `https://api-vkyc.mascom.vn/file/${item.image}`,
                         msg: item.response.error ? item.response.error : item.response.msg,
                     };
                 });
@@ -100,7 +100,7 @@ const CallDetailPage = () => {
 
                 const arrayImageFace = arraydataFace.map((item) => {
                     return {
-                        src: `http://103.23.135.42:5112/file/${item.image}`,
+                        src: `https://api-vkyc.mascom.vn/file/${item.image}`,
                         msg: item.response.error ? item.response.error : item.response.msg,
                     };
                 });
@@ -147,10 +147,10 @@ const CallDetailPage = () => {
                 }
                 if (dataOcrFront) {
                     setFrontImage({
-                        src: `http://103.23.135.42:5112/file/${dataOcrFront.image}`,
+                        src: `https://api-vkyc.mascom.vn/file/${dataOcrFront.image}`,
                         status: dataOcrFront.response.error ? false : true,
                     });
-                    frontImageRef.current = `http://103.23.135.42:5112/file/${dataOcrFront.image}`;
+                    frontImageRef.current = `https://api-vkyc.mascom.vn/file/${dataOcrFront.image}`;
                 }
                 if (dataOcrBack.response.output) {
                     const resultOcrBack = dataOcrBack.response.output;
@@ -161,14 +161,14 @@ const CallDetailPage = () => {
                 }
                 if (dataOcrBack) {
                     setBackImage({
-                        src: `http://103.23.135.42:5112/file/${dataOcrBack.image}`,
+                        src: `https://api-vkyc.mascom.vn/file/${dataOcrBack.image}`,
                         status: dataOcrBack.response.error ? false : true,
                     });
-                    backImageRef.current = `http://103.23.135.42:5112/file/${dataOcrBack.image}`;
+                    backImageRef.current = `https://api-vkyc.mascom.vn/file/${dataOcrBack.image}`;
                 }
                 if (dataCompareFace) {
                     setFace({
-                        src: `http://103.23.135.42:5112/file/${dataCompareFace.image}`,
+                        src: `https://api-vkyc.mascom.vn/file/${dataCompareFace.image}`,
                         status: dataCompareFace.response.error ? false : true,
                         similarity: dataCompareFace.response.output.similarity * 100,
                     });
@@ -179,7 +179,7 @@ const CallDetailPage = () => {
 
     const getToken = useCallback(() => {
         if (isLivestream) {
-            const apiUrl = 'http://103.23.135.42:5112/room/agent';
+            const apiUrl = 'https://api-vkyc.mascom.vn/room/agent';
             const data = {
                 roomId: id,
                 agentName: 'Agency1',
@@ -203,7 +203,7 @@ const CallDetailPage = () => {
         if (payload.new.room_id == id) {
             Notification('info', 'Thông tin cuộc gọi đang được cập nhật');
             const newItemImage = {
-                src: `http://103.23.135.42:5112/file/${payload.new.image}`,
+                src: `https://api-vkyc.mascom.vn/file/${payload.new.image}`,
                 msg: payload.new.response.error ? payload.new.response.error : payload.new.response.msg,
             };
 
@@ -228,10 +228,10 @@ const CallDetailPage = () => {
                 }
                 if (payload.new.image) {
                     setFrontImage({
-                        src: `http://103.23.135.42:5112/file/${payload.new.image}`,
+                        src: `https://api-vkyc.mascom.vn/file/${payload.new.image}`,
                         status: payload.new.response.error ? false : true,
                     });
-                    frontImageRef.current = `http://103.23.135.42:5112/file/${payload.new.image}`;
+                    frontImageRef.current = `https://api-vkyc.mascom.vn/file/${payload.new.image}`;
                 }
                 if (payload.new.response.output) {
                     form.setFieldsValue({
@@ -263,10 +263,10 @@ const CallDetailPage = () => {
 
                 if (payload.new.image) {
                     setBackImage({
-                        src: `http://103.23.135.42:5112/file/${payload.new.image}`,
+                        src: `https://api-vkyc.mascom.vn/file/${payload.new.image}`,
                         status: payload.new.response.error ? false : true,
                     });
-                    backImageRef.current = `http://103.23.135.42:5112/file/${payload.new.image}`;
+                    backImageRef.current = `https://api-vkyc.mascom.vn/file/${payload.new.image}`;
                 }
                 if (payload.new.response.output) {
                     form.setFieldsValue({
@@ -293,7 +293,7 @@ const CallDetailPage = () => {
                     setDescription(payload.new.response.error);
                 }
                 setFace({
-                    src: `http://103.23.135.42:5112/file/${payload.new.image}`,
+                    src: `https://api-vkyc.mascom.vn/file/${payload.new.image}`,
                     status: payload.new.response.error ? false : true,
                     similarity: payload.new.response.output.similarity * 100,
                 });
@@ -307,7 +307,7 @@ const CallDetailPage = () => {
         if (payload.new.id == id) {
             setTimeout(() => {
                 setIsLiveStream(payload.new.status);
-                setUrlVideo(`http://103.23.135.42:5112/file/${payload.new.video}`);
+                setUrlVideo(`https://api-vkyc.mascom.vn/file/${payload.new.video}`);
             }, 3000);
         }
     };
@@ -427,7 +427,7 @@ const CallDetailPage = () => {
     };
 
     const getSession = () => {
-        const apiUrl = 'http://103.23.135.42:5112/vkyc/session';
+        const apiUrl = 'https://api-vkyc.mascom.vn/vkyc/session';
         const data = {
             roomId: id,
         };

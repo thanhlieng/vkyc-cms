@@ -329,7 +329,7 @@ const HomePage = () => {
                         navigate('/call-manager/detail' + '/' + record.id, {
                             state: {
                                 roomName: record.room,
-                                video: `http://103.23.135.42:5112/file/${record.video}`,
+                                video: `https://api-vkyc.mascom.vn/file/${record.video}`,
                                 status: record.status,
                             },
                         })
