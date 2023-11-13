@@ -53,6 +53,7 @@
   "devDependencies": {
     "@babel/core": "^7.19.1",
     "@originjs/vite-plugin-commonjs": "^1.0.3",
+    "@types/lodash": "^4.14.201",
     "@types/node": "^18.8.4",
     "@types/react": "^18.0.17",
     "@types/react-color": "^3.0.6",

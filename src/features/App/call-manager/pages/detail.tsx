@@ -7,6 +7,7 @@ import Container from '@/layout/Container';
 import { supabase } from '@/supabaseClient';
 import { Notification } from '@/utils';
 import { isEqualTrackRef } from '@livekit/components-core';
+import _ from 'lodash';
 import {
     CarouselLayout,
     ControlBar,
@@ -468,7 +469,6 @@ const CallDetailPage = () => {
     };
 
     return (
-        // <div style={{ height: '100vh' }}>
         <Spin spinning={isLoading} size="large" style={{ marginTop: 200, height: '100vh' }}>
             <div style={{ height: '100vh' }}>
                 <FormComponent form={form} onSubmit={(values: any) => {}}>
@@ -530,7 +530,7 @@ const CallDetailPage = () => {
                                 />
                             </Steps>
                             <Row>
-                                <Col xs={24} sm={24} lg={10}>
+                                <Col xs={24} sm={24} lg={!isLivestream ? 12 : 14}>
                                     <div
                                         style={{ fontSize: 16, fontWeight: '600', color: '#2A8CCC', marginBottom: 15 }}
                                     >
@@ -606,12 +606,12 @@ const CallDetailPage = () => {
                                         />
                                     </Row>
                                 </Col>
-                                <Col xs={24} sm={24} lg={14}>
+                                <Col xs={24} sm={24} lg={isLivestream ? 10 : 12}>
                                     {isLivestream ? (
                                         <>
                                             {isDisplayLiveStream ? (
                                                 <>
-                                                    <div style={{ height: '72vh' }}>
+                                                    <div style={{ height: '90vh' }}>
                                                         <div
                                                             style={{
                                                                 fontSize: 16,
@@ -627,7 +627,7 @@ const CallDetailPage = () => {
                                                             audio={true}
                                                             token={token}
                                                             connectOptions={{ autoSubscribe: true }}
-                                                            serverUrl={'wss://test-lr2tmegs.livekit.cloud'}
+                                                            serverUrl={'wss://livekit.mascom.vn:4473'}
                                                             data-lk-theme="default"
                                                             style={{ height: '100%' }}
                                                         >
@@ -635,7 +635,7 @@ const CallDetailPage = () => {
                                                             <RoomAudioRenderer />
                                                             <LayoutButtonCamera
                                                                 step={step}
-                                                                captureScreenShot={captureScreenShot}
+                                                                captureScreenShot={_.debounce(captureScreenShot, 500)}
                                                             />
                                                         </LiveKitRoom>
                                                     </div>
@@ -888,7 +888,6 @@ const CallDetailPage = () => {
                 </FormComponent>
             </div>
         </Spin>
-        // </div>
     );
 };
 
