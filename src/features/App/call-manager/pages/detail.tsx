@@ -554,7 +554,7 @@ const CallDetailPage = () => {
                                                     audio={true}
                                                     token={token}
                                                     connectOptions={{ autoSubscribe: true }}
-                                                    serverUrl={'wss://test-lr2tmegs.livekit.cloud'}
+                                                    serverUrl={'wss://livekit.mascom.vn:4473'}
                                                     data-lk-theme="default"
                                                     style={{ height: '100%' }}
                                                 >
