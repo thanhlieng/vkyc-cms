@@ -24,7 +24,7 @@ import {
     useTracks,
 } from '@livekit/components-react';
 import '@livekit/components-styles';
-import { Button, Col, Form, Image, Input, Row, Steps } from 'antd';
+import { Button, Col, Form, Image, Input, Row, Spin, Steps } from 'antd';
 import axios from 'axios';
 import { Track } from 'livekit-client';
 import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
@@ -57,6 +57,7 @@ const CallDetailPage = () => {
     const [isLivestream, setIsLiveStream] = useState(location.state.status);
     const [isDisplayLiveStream, setIsDisplayLiveStream] = useState(false);
     const [isDisplayVideo, setIsDisplayVideo] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const [urlVideo, setUrlVideo] = useState(location.state.video ? location.state.video : '');
     const [token, setToken] = useState('');
     const frontImageRef = useRef('');
@@ -64,8 +65,9 @@ const CallDetailPage = () => {
     const sessionIdRef = useRef('');
 
     const getDataDetailCall = useCallback(async () => {
+        setIsLoading(true);
         try {
-            const { data } = await supabase
+            const { data, error } = await supabase
                 .from('request')
                 .select(`*`)
                 .eq('room_id', id)
@@ -173,8 +175,16 @@ const CallDetailPage = () => {
                         similarity: dataCompareFace.response.output.similarity * 100,
                     });
                 }
+                setIsLoading(false);
+            } else {
+                setIsLoading(false);
             }
-        } catch (error) {}
+            if (error) {
+                setIsLoading(false);
+            }
+        } catch (error) {
+            setIsLoading(false);
+        }
     }, []);
 
     const getToken = useCallback(() => {
@@ -348,19 +358,25 @@ const CallDetailPage = () => {
 
                     switch (key) {
                         case 'front_image':
-                            await axiosInstance.post('/vkyc/ocr', fd, {
-                                headers: {
-                                    'Content-Type': 'multipart/form-data',
-                                },
-                            });
+                            try {
+                                await axiosInstance.post('/vkyc/ocr', fd, {
+                                    headers: {
+                                        'Content-Type': 'multipart/form-data',
+                                    },
+                                });
+                                setIsLoading(false);
+                            } catch (error) {}
 
                             break;
                         case 'back_image':
-                            await axiosInstance.post('/vkyc/ocr', fd, {
-                                headers: {
-                                    'Content-Type': 'multipart/form-data',
-                                },
-                            });
+                            try {
+                                await axiosInstance.post('/vkyc/ocr', fd, {
+                                    headers: {
+                                        'Content-Type': 'multipart/form-data',
+                                    },
+                                });
+                                setIsLoading(false);
+                            } catch (error) {}
 
                             break;
                         case 'portrait_image':
@@ -370,8 +386,8 @@ const CallDetailPage = () => {
                                         'Content-Type': 'multipart/form-data',
                                     },
                                 });
+                                setIsLoading(false);
                             } catch (error) {
-                                Notification('error', 'Liveness face fail');
                                 console.log('error', error);
                             }
 
@@ -386,6 +402,7 @@ const CallDetailPage = () => {
 
     const captureScreenShot = (value: onclickProps, typeImage?: string) => {
         if (value.track.mediaStream) {
+            setIsLoading(true);
             const videoStream = value.track.mediaStream;
             console.log(videoStream);
             const canvas = document.createElement('canvas');
@@ -427,378 +444,451 @@ const CallDetailPage = () => {
     };
 
     const getSession = () => {
-        const apiUrl = 'https://api-vkyc.mascom.vn/vkyc/session';
-        const data = {
-            roomId: id,
-        };
-
-        axios
-            .post(apiUrl, data)
-            .then((response) => {
-                sessionIdRef.current = response.data.output.id;
-                console.log(response.data);
-            })
-            .catch((error) => {
-                console.error('Lỗi:', error);
-            });
+        if (!sessionIdRef.current) {
+            const apiUrl = 'https://api-vkyc.mascom.vn/vkyc/session';
+            const data = {
+                roomId: id,
+            };
+            setIsLoading(true);
+            axios
+                .post(apiUrl, data)
+                .then((response) => {
+                    setIsLoading(false);
+                    sessionIdRef.current = response.data.output.id;
+                    setIsDisplayLiveStream(true);
+                    console.log(response.data);
+                })
+                .catch((error) => {
+                    setIsLoading(false);
+                    console.error('Lỗi:', error);
+                });
+        } else {
+            setIsDisplayLiveStream(true);
+        }
     };
 
     return (
-        <FormComponent form={form} onSubmit={(values: any) => {}}>
-            <TopBar title={`Thông tin cuộc gọi ${id}`} />
-            <Container>
-                <CardComponent>
-                    <div style={{ fontSize: 16, fontWeight: '600', color: '#2A8CCC', marginBottom: 15, marginTop: 20 }}>
-                        Quy trình thực hiện
-                    </div>
-
-                    <Steps style={{ marginBottom: 20 }} size="small" current={step}>
-                        <Step
-                            description={
-                                step === 0 ? <div style={{ color: 'red', fontSize: 13 }}>{description}</div> : ''
-                            }
-                            title="OCR Mặt trước"
-                        />
-                        <Step
-                            description={
-                                step === 1 ? <div style={{ color: 'red', fontSize: 13 }}>{description}</div> : ''
-                            }
-                            title="OCR Mặt sau"
-                        />
-                        <Step
-                            description={
-                                step === 2 ? <div style={{ color: 'red', fontSize: 13 }}>{description}</div> : ''
-                            }
-                            title="So sánh khuôn mặt"
-                        />
-                        <Step
-                            description={
-                                step === 3 ? <div style={{ color: 'red', fontSize: 13 }}>{description}</div> : ''
-                            }
-                            title="Hậu kiểm"
-                        />
-                    </Steps>
-                    <Row>
-                        <Col xs={24} sm={24} lg={10}>
-                            <div style={{ fontSize: 16, fontWeight: '600', color: '#2A8CCC', marginBottom: 15 }}>
-                                Thông tin người đại diện
+        // <div style={{ height: '100vh' }}>
+        <Spin spinning={isLoading} size="large" style={{ marginTop: 200, height: '100vh' }}>
+            <div style={{ height: '100vh' }}>
+                <FormComponent form={form} onSubmit={(values: any) => {}}>
+                    <TopBar title={`Thông tin cuộc gọi ${id}`} />
+                    <Container>
+                        <CardComponent>
+                            <div
+                                style={{
+                                    fontSize: 16,
+                                    fontWeight: '600',
+                                    color: '#2A8CCC',
+                                    marginBottom: 15,
+                                    marginTop: 20,
+                                }}
+                            >
+                                Quy trình thực hiện
                             </div>
-                            <Row>
-                                <FormItemComponent
-                                    name="name"
-                                    label="Họ và tên"
-                                    inputField={<Input readOnly style={{ height: 40 }} placeholder="Nhập họ tên" />}
-                                />
-                                <FormItemComponent
-                                    name="birthday"
-                                    label="Ngày sinh"
-                                    inputField={<Input readOnly style={{ height: 40 }} placeholder="Nhập ngày sinh" />}
-                                />
-                                <FormItemComponent
-                                    name="gender"
-                                    label="Giới tính"
-                                    inputField={<Input readOnly style={{ height: 40 }} placeholder="Nhập giới tính" />}
-                                />
-                                <FormItemComponent
-                                    name="address"
-                                    label="Địa chỉ"
-                                    inputField={<Input readOnly style={{ height: 40 }} placeholder="Nhập địa chỉ" />}
-                                />
-                                <FormItemComponent
-                                    name="documentType"
-                                    label="Loại giấy tờ"
-                                    inputField={
-                                        <Input readOnly style={{ height: 40 }} placeholder="Nhập loại giấy tờ" />
+
+                            <Steps style={{ marginBottom: 20 }} size="small" current={step}>
+                                <Step
+                                    description={
+                                        step === 0 ? (
+                                            <div style={{ color: 'red', fontSize: 13 }}>{description}</div>
+                                        ) : (
+                                            ''
+                                        )
                                     }
+                                    title="OCR Mặt trước"
                                 />
-                                <FormItemComponent
-                                    name="documentNumber"
-                                    label="Số giấy tờ"
-                                    inputField={<Input readOnly style={{ height: 40 }} placeholder="Nhập số giấy tờ" />}
+                                <Step
+                                    description={
+                                        step === 1 ? (
+                                            <div style={{ color: 'red', fontSize: 13 }}>{description}</div>
+                                        ) : (
+                                            ''
+                                        )
+                                    }
+                                    title="OCR Mặt sau"
                                 />
-                                <FormItemComponent
-                                    name="issueDate"
-                                    label="Ngày cấp"
-                                    inputField={<Input readOnly style={{ height: 40 }} placeholder="Nhập ngày cáp" />}
+                                <Step
+                                    description={
+                                        step === 2 ? (
+                                            <div style={{ color: 'red', fontSize: 13 }}>{description}</div>
+                                        ) : (
+                                            ''
+                                        )
+                                    }
+                                    title="So sánh khuôn mặt"
                                 />
-                                <FormItemComponent
-                                    name="issueAddress"
-                                    label="Nơi cấp"
-                                    inputField={<Input readOnly style={{ height: 40 }} placeholder="Nhập nơi cấp" />}
+                                <Step
+                                    description={
+                                        step === 3 ? (
+                                            <div style={{ color: 'red', fontSize: 13 }}>{description}</div>
+                                        ) : (
+                                            ''
+                                        )
+                                    }
+                                    title="Hậu kiểm"
                                 />
-                                <FormItemComponent
-                                    name="idSession"
-                                    label="Mã cuộc gọi"
-                                    inputField={<Input readOnly style={{ height: 40 }} placeholder="Mã cuộc gọi" />}
-                                />
-                            </Row>
-                        </Col>
-                        <Col xs={24} sm={24} lg={14}>
-                            {isLivestream ? (
-                                <>
-                                    {isDisplayLiveStream ? (
+                            </Steps>
+                            <Row>
+                                <Col xs={24} sm={24} lg={10}>
+                                    <div
+                                        style={{ fontSize: 16, fontWeight: '600', color: '#2A8CCC', marginBottom: 15 }}
+                                    >
+                                        Thông tin người đại diện
+                                    </div>
+                                    <Row>
+                                        <FormItemComponent
+                                            name="name"
+                                            label="Họ và tên"
+                                            inputField={
+                                                <Input readOnly style={{ height: 40 }} placeholder="Nhập họ tên" />
+                                            }
+                                        />
+                                        <FormItemComponent
+                                            name="birthday"
+                                            label="Ngày sinh"
+                                            inputField={
+                                                <Input readOnly style={{ height: 40 }} placeholder="Nhập ngày sinh" />
+                                            }
+                                        />
+                                        <FormItemComponent
+                                            name="gender"
+                                            label="Giới tính"
+                                            inputField={
+                                                <Input readOnly style={{ height: 40 }} placeholder="Nhập giới tính" />
+                                            }
+                                        />
+                                        <FormItemComponent
+                                            name="address"
+                                            label="Địa chỉ"
+                                            inputField={
+                                                <Input readOnly style={{ height: 40 }} placeholder="Nhập địa chỉ" />
+                                            }
+                                        />
+                                        <FormItemComponent
+                                            name="documentType"
+                                            label="Loại giấy tờ"
+                                            inputField={
+                                                <Input
+                                                    readOnly
+                                                    style={{ height: 40 }}
+                                                    placeholder="Nhập loại giấy tờ"
+                                                />
+                                            }
+                                        />
+                                        <FormItemComponent
+                                            name="documentNumber"
+                                            label="Số giấy tờ"
+                                            inputField={
+                                                <Input readOnly style={{ height: 40 }} placeholder="Nhập số giấy tờ" />
+                                            }
+                                        />
+                                        <FormItemComponent
+                                            name="issueDate"
+                                            label="Ngày cấp"
+                                            inputField={
+                                                <Input readOnly style={{ height: 40 }} placeholder="Nhập ngày cáp" />
+                                            }
+                                        />
+                                        <FormItemComponent
+                                            name="issueAddress"
+                                            label="Nơi cấp"
+                                            inputField={
+                                                <Input readOnly style={{ height: 40 }} placeholder="Nhập nơi cấp" />
+                                            }
+                                        />
+                                        <FormItemComponent
+                                            name="idSession"
+                                            label="Mã cuộc gọi"
+                                            inputField={
+                                                <Input readOnly style={{ height: 40 }} placeholder="Mã cuộc gọi" />
+                                            }
+                                        />
+                                    </Row>
+                                </Col>
+                                <Col xs={24} sm={24} lg={14}>
+                                    {isLivestream ? (
                                         <>
-                                            <div style={{ height: '72vh' }}>
+                                            {isDisplayLiveStream ? (
+                                                <>
+                                                    <div style={{ height: '72vh' }}>
+                                                        <div
+                                                            style={{
+                                                                fontSize: 16,
+                                                                fontWeight: '600',
+                                                                color: '#2A8CCC',
+                                                                marginBottom: 15,
+                                                            }}
+                                                        >
+                                                            Cuộc gọi VKYC
+                                                        </div>
+                                                        <LiveKitRoom
+                                                            video={true}
+                                                            audio={true}
+                                                            token={token}
+                                                            connectOptions={{ autoSubscribe: true }}
+                                                            serverUrl={'wss://test-lr2tmegs.livekit.cloud'}
+                                                            data-lk-theme="default"
+                                                            style={{ height: '100%' }}
+                                                        >
+                                                            <MyVideoConference setIsLiveStream={setIsLiveStream} />
+                                                            <RoomAudioRenderer />
+                                                            <LayoutButtonCamera
+                                                                step={step}
+                                                                captureScreenShot={captureScreenShot}
+                                                            />
+                                                        </LiveKitRoom>
+                                                    </div>
+                                                </>
+                                            ) : (
                                                 <div
                                                     style={{
-                                                        fontSize: 16,
-                                                        fontWeight: '600',
-                                                        color: '#2A8CCC',
-                                                        marginBottom: 15,
+                                                        display: 'flex',
+                                                        justifyContent: 'center',
                                                     }}
                                                 >
-                                                    Cuộc gọi VKYC
+                                                    <Button
+                                                        type="primary"
+                                                        className="gx-mb-0"
+                                                        style={{ display: 'flex', alignItems: 'center' }}
+                                                        onClick={getSession}
+                                                        icon={<IconAntd icon="PhoneOutlined" />}
+                                                    >
+                                                        Tham gia hỗ trợ
+                                                    </Button>
                                                 </div>
-                                                <LiveKitRoom
-                                                    video={true}
-                                                    audio={true}
-                                                    token={token}
-                                                    connectOptions={{ autoSubscribe: true }}
-                                                    serverUrl={'wss://test-lr2tmegs.livekit.cloud'}
-                                                    data-lk-theme="default"
-                                                    style={{ height: '100%' }}
-                                                >
-                                                    <MyVideoConference setIsLiveStream={setIsLiveStream} />
-                                                    <RoomAudioRenderer />
-                                                    <LayoutButtonCamera
-                                                        step={step}
-                                                        captureScreenShot={captureScreenShot}
-                                                    />
-                                                </LiveKitRoom>
-                                            </div>
+                                            )}
                                         </>
                                     ) : (
-                                        <div
-                                            style={{
-                                                display: 'flex',
-                                                justifyContent: 'center',
-                                            }}
-                                        >
-                                            <Button
-                                                type="primary"
-                                                className="gx-mb-0"
-                                                style={{ display: 'flex', alignItems: 'center' }}
-                                                onClick={() => {
-                                                    getSession();
-                                                    setIsDisplayLiveStream(true);
-                                                }}
-                                                icon={<IconAntd icon="PhoneOutlined" />}
-                                            >
-                                                Tham gia hỗ trợ
-                                            </Button>
-                                        </div>
+                                        <>
+                                            {isDisplayVideo ? (
+                                                <ReactPlayer
+                                                    width="100%"
+                                                    url={urlVideo}
+                                                    playing={false}
+                                                    controls={true}
+                                                />
+                                            ) : (
+                                                <div
+                                                    style={{
+                                                        display: 'flex',
+                                                        justifyContent: 'center',
+                                                    }}
+                                                >
+                                                    <Button
+                                                        type="primary"
+                                                        className="gx-mb-0"
+                                                        style={{ display: 'flex', alignItems: 'center' }}
+                                                        onClick={() => {
+                                                            setIsDisplayVideo(true);
+                                                        }}
+                                                        //icon={<IconAntd icon="PhoneOutlined" />}
+                                                    >
+                                                        Video VKYC
+                                                    </Button>
+                                                </div>
+                                            )}
+                                        </>
                                     )}
-                                </>
+                                </Col>
+                            </Row>
+
+                            {!seeMore ? (
+                                <Row style={{ marginTop: isLivestream ? 130 : 15 }}>
+                                    {frontImage.src && (
+                                        <ViewImageStyled>
+                                            <div style={{ marginBottom: 15, fontSize: 14.5, fontWeight: '600' }}>
+                                                Chứng minh nhân dân mặt trước
+                                            </div>
+                                            {frontImage.src && (
+                                                <>
+                                                    <Image src={frontImage.src} />
+                                                    <div
+                                                        style={{
+                                                            marginTop: 10,
+                                                            fontWeight: 'bold',
+                                                            color: frontImage.status ? 'green' : 'red',
+                                                        }}
+                                                    >
+                                                        {frontImage.status ? 'Pass' : 'Fail'}
+                                                    </div>
+                                                </>
+                                            )}
+                                        </ViewImageStyled>
+                                    )}
+                                    {backImage.src && (
+                                        <ViewImageStyled>
+                                            <div style={{ marginBottom: 15, fontSize: 14.5, fontWeight: '600' }}>
+                                                Chứng minh nhân dân mặt sau
+                                            </div>
+                                            {backImage.src && (
+                                                <>
+                                                    <Image src={backImage.src} />
+                                                    <div
+                                                        style={{
+                                                            marginTop: 10,
+                                                            fontWeight: 'bold',
+                                                            color: backImage.status ? 'green' : 'red',
+                                                        }}
+                                                    >
+                                                        {backImage.status ? 'Pass' : 'Fail'}
+                                                    </div>
+                                                </>
+                                            )}
+                                        </ViewImageStyled>
+                                    )}
+                                    {face.src && (
+                                        <ViewImageStyled>
+                                            <div style={{ marginBottom: 15, fontSize: 14.5, fontWeight: '600' }}>
+                                                Ảnh chân dung
+                                            </div>
+                                            {face.src && (
+                                                <>
+                                                    <Image src={face.src} />
+                                                    <div
+                                                        style={{
+                                                            marginTop: 10,
+                                                            fontWeight: 'bold',
+                                                            color: face.status ? 'green' : 'red',
+                                                        }}
+                                                    >
+                                                        {face.status
+                                                            ? `Độ chính xác: ${face.similarity.toFixed()}%`
+                                                            : 'Fail'}
+                                                    </div>
+                                                </>
+                                            )}
+                                        </ViewImageStyled>
+                                    )}
+                                </Row>
                             ) : (
                                 <>
-                                    {isDisplayVideo ? (
-                                        <ReactPlayer width="100%" url={urlVideo} playing={false} controls={true} />
-                                    ) : (
-                                        <div
-                                            style={{
-                                                display: 'flex',
-                                                justifyContent: 'center',
-                                            }}
-                                        >
-                                            <Button
-                                                type="primary"
-                                                className="gx-mb-0"
-                                                style={{ display: 'flex', alignItems: 'center' }}
-                                                onClick={() => {
-                                                    setIsDisplayVideo(true);
+                                    {arrayFrontImage.length > 0 && (
+                                        <Col>
+                                            <div
+                                                style={{
+                                                    marginBottom: 15,
+                                                    marginTop: isLivestream ? 120 : 0,
+                                                    fontSize: 14.5,
+                                                    fontWeight: '600',
                                                 }}
-                                                //icon={<IconAntd icon="PhoneOutlined" />}
                                             >
-                                                Video VKYC
-                                            </Button>
-                                        </div>
+                                                Chứng minh nhân dân mặt trước
+                                            </div>
+                                            <Row>
+                                                {arrayFrontImage.map((item: any, index: number) => {
+                                                    return (
+                                                        <ViewImageStyled key={index}>
+                                                            <Image src={item.src} />
+                                                            <div
+                                                                style={{
+                                                                    marginTop: 10,
+                                                                    fontWeight: 'bold',
+                                                                    color:
+                                                                        item.msg == 'SUCCESS' ||
+                                                                        item.msg == 'Thành công'
+                                                                            ? 'green'
+                                                                            : 'red',
+                                                                }}
+                                                            >
+                                                                {item.msg == 'SUCCESS' ? 'Pass' : item.msg}
+                                                            </div>
+                                                        </ViewImageStyled>
+                                                    );
+                                                })}
+                                            </Row>
+                                        </Col>
+                                    )}
+                                    {arrayBackImage.length > 0 && (
+                                        <Col>
+                                            <div
+                                                style={{
+                                                    marginBottom: 15,
+                                                    fontSize: 14.5,
+                                                    fontWeight: '600',
+                                                    marginTop: 10,
+                                                }}
+                                            >
+                                                Chứng minh nhân dân mặt sau
+                                            </div>
+                                            <Row>
+                                                {arrayBackImage.map((item: any, index: number) => {
+                                                    return (
+                                                        <ViewImageStyled key={index}>
+                                                            <Image src={item.src} />
+                                                            <div
+                                                                style={{
+                                                                    marginTop: 10,
+                                                                    fontWeight: 'bold',
+                                                                    color:
+                                                                        item.msg == 'SUCCESS' ||
+                                                                        item.msg == 'Thành công'
+                                                                            ? 'green'
+                                                                            : 'red',
+                                                                }}
+                                                            >
+                                                                {item.msg == 'SUCCESS' ? 'Pass' : item.msg}
+                                                            </div>
+                                                        </ViewImageStyled>
+                                                    );
+                                                })}
+                                            </Row>
+                                        </Col>
+                                    )}
+                                    {arrayFaceImage.length > 0 && (
+                                        <Col>
+                                            <div
+                                                style={{
+                                                    marginBottom: 15,
+                                                    fontSize: 14.5,
+                                                    marginTop: 10,
+                                                    fontWeight: '600',
+                                                }}
+                                            >
+                                                Ảnh chân dung
+                                            </div>
+                                            <Row>
+                                                {arrayFaceImage.map((item: any, index: number) => {
+                                                    return (
+                                                        <ViewImageStyled key={index}>
+                                                            <Image src={item.src} />
+                                                            <div
+                                                                style={{
+                                                                    marginTop: 10,
+                                                                    fontWeight: 'bold',
+                                                                    color:
+                                                                        item.msg == 'SUCCESS' ||
+                                                                        item.msg == 'Thành công'
+                                                                            ? 'green'
+                                                                            : 'red',
+                                                                }}
+                                                            >
+                                                                {item.msg == 'SUCCESS' ? 'Pass' : item.msg}
+                                                            </div>
+                                                        </ViewImageStyled>
+                                                    );
+                                                })}
+                                            </Row>
+                                        </Col>
                                     )}
                                 </>
                             )}
-                        </Col>
-                    </Row>
-
-                    {!seeMore ? (
-                        <Row style={{ marginTop: isLivestream ? 130 : 15 }}>
-                            {frontImage.src && (
-                                <ViewImageStyled>
-                                    <div style={{ marginBottom: 15, fontSize: 14.5, fontWeight: '600' }}>
-                                        Chứng minh nhân dân mặt trước
-                                    </div>
-                                    {frontImage.src && (
-                                        <>
-                                            <Image src={frontImage.src} />
-                                            <div
-                                                style={{
-                                                    marginTop: 10,
-                                                    fontWeight: 'bold',
-                                                    color: frontImage.status ? 'green' : 'red',
-                                                }}
-                                            >
-                                                {frontImage.status ? 'Pass' : 'Fail'}
-                                            </div>
-                                        </>
-                                    )}
-                                </ViewImageStyled>
+                            {(frontImage.src || backImage.src || face.src) && (
+                                <Button
+                                    onClick={() => {
+                                        setSeeMore(!seeMore);
+                                    }}
+                                    style={{ marginTop: 10 }}
+                                >
+                                    {seeMore ? 'Thu gọn' : 'Xem chi tiết'}
+                                </Button>
                             )}
-                            {backImage.src && (
-                                <ViewImageStyled>
-                                    <div style={{ marginBottom: 15, fontSize: 14.5, fontWeight: '600' }}>
-                                        Chứng minh nhân dân mặt sau
-                                    </div>
-                                    {backImage.src && (
-                                        <>
-                                            <Image src={backImage.src} />
-                                            <div
-                                                style={{
-                                                    marginTop: 10,
-                                                    fontWeight: 'bold',
-                                                    color: backImage.status ? 'green' : 'red',
-                                                }}
-                                            >
-                                                {backImage.status ? 'Pass' : 'Fail'}
-                                            </div>
-                                        </>
-                                    )}
-                                </ViewImageStyled>
-                            )}
-                            {face.src && (
-                                <ViewImageStyled>
-                                    <div style={{ marginBottom: 15, fontSize: 14.5, fontWeight: '600' }}>
-                                        Ảnh chân dung
-                                    </div>
-                                    {face.src && (
-                                        <>
-                                            <Image src={face.src} />
-                                            <div
-                                                style={{
-                                                    marginTop: 10,
-                                                    fontWeight: 'bold',
-                                                    color: face.status ? 'green' : 'red',
-                                                }}
-                                            >
-                                                {face.status ? `Độ chính xác: ${face.similarity.toFixed()}%` : 'Fail'}
-                                            </div>
-                                        </>
-                                    )}
-                                </ViewImageStyled>
-                            )}
-                        </Row>
-                    ) : (
-                        <>
-                            {arrayFrontImage.length > 0 && (
-                                <Col>
-                                    <div
-                                        style={{
-                                            marginBottom: 15,
-                                            marginTop: isLivestream ? 120 : 0,
-                                            fontSize: 14.5,
-                                            fontWeight: '600',
-                                        }}
-                                    >
-                                        Chứng minh nhân dân mặt trước
-                                    </div>
-                                    <Row>
-                                        {arrayFrontImage.map((item: any, index: number) => {
-                                            return (
-                                                <ViewImageStyled key={index}>
-                                                    <Image src={item.src} />
-                                                    <div
-                                                        style={{
-                                                            marginTop: 10,
-                                                            fontWeight: 'bold',
-                                                            color:
-                                                                item.msg == 'SUCCESS' || item.msg == 'Thành công'
-                                                                    ? 'green'
-                                                                    : 'red',
-                                                        }}
-                                                    >
-                                                        {item.msg == 'SUCCESS' ? 'Pass' : item.msg}
-                                                    </div>
-                                                </ViewImageStyled>
-                                            );
-                                        })}
-                                    </Row>
-                                </Col>
-                            )}
-                            {arrayBackImage.length > 0 && (
-                                <Col>
-                                    <div
-                                        style={{
-                                            marginBottom: 15,
-                                            fontSize: 14.5,
-                                            fontWeight: '600',
-                                            marginTop: 10,
-                                        }}
-                                    >
-                                        Chứng minh nhân dân mặt sau
-                                    </div>
-                                    <Row>
-                                        {arrayBackImage.map((item: any, index: number) => {
-                                            return (
-                                                <ViewImageStyled key={index}>
-                                                    <Image src={item.src} />
-                                                    <div
-                                                        style={{
-                                                            marginTop: 10,
-                                                            fontWeight: 'bold',
-                                                            color:
-                                                                item.msg == 'SUCCESS' || item.msg == 'Thành công'
-                                                                    ? 'green'
-                                                                    : 'red',
-                                                        }}
-                                                    >
-                                                        {item.msg == 'SUCCESS' ? 'Pass' : item.msg}
-                                                    </div>
-                                                </ViewImageStyled>
-                                            );
-                                        })}
-                                    </Row>
-                                </Col>
-                            )}
-                            {arrayFaceImage.length > 0 && (
-                                <Col>
-                                    <div style={{ marginBottom: 15, fontSize: 14.5, marginTop: 10, fontWeight: '600' }}>
-                                        Ảnh chân dung
-                                    </div>
-                                    <Row>
-                                        {arrayFaceImage.map((item: any, index: number) => {
-                                            return (
-                                                <ViewImageStyled key={index}>
-                                                    <Image src={item.src} />
-                                                    <div
-                                                        style={{
-                                                            marginTop: 10,
-                                                            fontWeight: 'bold',
-                                                            color:
-                                                                item.msg == 'SUCCESS' || item.msg == 'Thành công'
-                                                                    ? 'green'
-                                                                    : 'red',
-                                                        }}
-                                                    >
-                                                        {item.msg == 'SUCCESS' ? 'Pass' : item.msg}
-                                                    </div>
-                                                </ViewImageStyled>
-                                            );
-                                        })}
-                                    </Row>
-                                </Col>
-                            )}
-                        </>
-                    )}
-                    {(frontImage.src || backImage.src || face.src) && (
-                        <Button
-                            onClick={() => {
-                                setSeeMore(!seeMore);
-                            }}
-                            style={{ marginTop: 10 }}
-                        >
-                            {seeMore ? 'Thu gọn' : 'Xem chi tiết'}
-                        </Button>
-                    )}
-                </CardComponent>
-            </Container>
-        </FormComponent>
+                        </CardComponent>
+                    </Container>
+                </FormComponent>
+            </div>
+        </Spin>
+        // </div>
     );
 };
 

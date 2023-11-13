@@ -33,7 +33,7 @@ const CallManagerPage = () => {
         setIsLoading(true);
         try {
             let query = supabase.from('room').select(
-                `id, room, status, user, is_occupied, video, created_at, updated_at, 
+                `id, room, status, user, is_occupied, video, created_at, updated_at, is_success,
                 agency(id, name)`,
                 { count: 'exact' }
             );
@@ -63,6 +63,7 @@ const CallManagerPage = () => {
                         ...item,
                         reciever: item.agency ? item.agency?.name.toString() : '',
                         updated_at: !item.status ? item.updated_at : '',
+                        statusVKYC: item.is_success ? 1 : !item.is_success && !item.status ? 2 : 0,
                     };
                 });
                 dataCallRef.current = newData;
@@ -116,7 +117,14 @@ const CallManagerPage = () => {
     };
 
     const handleDataChanged = async (payload: {
-        new: { id: number; created_at: string; agency_id: number; status: boolean; updated_at: string };
+        new: {
+            id: number;
+            created_at: string;
+            agency_id: number;
+            status: boolean;
+            updated_at: string;
+            is_success: boolean;
+        };
         eventType: string;
     }) => {
         console.log(payload);
@@ -124,6 +132,7 @@ const CallManagerPage = () => {
             ...payload.new,
             reciever: payload.new.agency_id ? findNameAgency(payload.new.agency_id) : '',
             updated_at: !payload.new.status ? payload.new.updated_at : '',
+            statusVKYC: payload.new.is_success ? 1 : !payload.new.is_success && !payload.new.status ? 2 : 0,
         };
 
         if (payload.eventType === 'INSERT') {

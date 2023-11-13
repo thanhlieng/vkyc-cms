@@ -6,3 +6,5 @@ c5c3c00a202b842014615357e8aad5cac66bced5 2415c9dab3a0ab75168912d8ed9874f39d780cd
 2415c9dab3a0ab75168912d8ed9874f39d780cda 2415c9dab3a0ab75168912d8ed9874f39d780cda Nguyễn Ngọc Thành <thanhnn@mascom.vn> 1699619111 +0700	reset: moving to HEAD
 2415c9dab3a0ab75168912d8ed9874f39d780cda 1ae1324b8473689e694a680c6951a5b86e9fb640 Nguyễn Ngọc Thành <thanhnn@mascom.vn> 1699619148 +0700	pull: Fast-forward
 1ae1324b8473689e694a680c6951a5b86e9fb640 4e111495a8eb4a15889550ea2bcd6246e1e50b96 Nguyễn Ngọc Thành <thanhnn@mascom.vn> 1699619185 +0700	pull: Fast-forward
+4e111495a8eb4a15889550ea2bcd6246e1e50b96 46c0349713e9ca0e416b5043bc6d0d7170384d1d Nguyễn Ngọc Thành <thanhnn@mascom.vn> 1699868216 +0700	commit: change http to https
+46c0349713e9ca0e416b5043bc6d0d7170384d1d eb1db895f270791763d424a7d0fa3d43cc7dee5b Nguyễn Ngọc Thành <thanhnn@mascom.vn> 1699868266 +0700	commit (merge): .

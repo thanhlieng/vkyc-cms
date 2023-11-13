@@ -5,7 +5,7 @@ import CountUp from 'react-countup';
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import styled from 'styled-components';
 
-const ChartReport = (props: { data: any[]; label: string; type: string }) => {
+const ChartReport = (props: { data: any[]; label: string; type?: string }) => {
     return (
         <ReportChartStyled>
             <div style={{ margin: 10, marginBottom: 20, fontWeight: 'bold', alignSelf: 'center' }}>{props.label}</div>
@@ -27,13 +27,43 @@ const ChartReport = (props: { data: any[]; label: string; type: string }) => {
                         <YAxis />
                         <Tooltip />
                         <Legend />
-                        <Line
-                            type="monotone"
-                            dataKey="call"
-                            stroke={props.type === 'all' ? '#8884d8' : '#82ca9d'}
-                            strokeWidth={2}
-                            name="Cuộc gọi"
-                        />
+                        {/* <Line type="monotone" dataKey="call" stroke={'#8884d8'} strokeWidth={2} name="Cuộc gọi" /> */}
+                        {props.type === 'total' ? (
+                            <Line
+                                type="monotone"
+                                dataKey="call"
+                                stroke={'#5bc0de'}
+                                strokeWidth={2}
+                                name="Cuộc gọi thành công"
+                            />
+                        ) : (
+                            <>
+                                {props.type === 'today' && (
+                                    <Line
+                                        type="monotone"
+                                        dataKey="callProcess"
+                                        stroke={'#5bc0de'}
+                                        strokeWidth={2}
+                                        name="Cuộc gọi đang diễn ra"
+                                    />
+                                )}
+
+                                <Line
+                                    type="monotone"
+                                    dataKey="callSuccess"
+                                    stroke={'#22bb33'}
+                                    strokeWidth={2}
+                                    name="Cuộc gọi thành công"
+                                />
+                                <Line
+                                    type="monotone"
+                                    dataKey="callFail"
+                                    stroke={'#bb2124'}
+                                    strokeWidth={2}
+                                    name="Cuộc gọi thất bại"
+                                />
+                            </>
+                        )}
                     </LineChart>
                 </ResponsiveContainer>
             </BoxChart>

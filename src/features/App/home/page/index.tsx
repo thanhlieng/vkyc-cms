@@ -37,7 +37,7 @@ const HomePage = () => {
         try {
             const { data, error } = await supabase
                 .from('room')
-                .select(`created_at`)
+                .select(`created_at,is_success, status`)
                 .order('created_at', { ascending: true });
 
             if (data && data.length > 0) {
@@ -46,9 +46,19 @@ const HomePage = () => {
                     const existingItem = acc.find((item: { name: string }) => item.name === momentToStringDate(date));
 
                     if (existingItem) {
+                        if (obj.is_success) {
+                            existingItem.callSuccess++;
+                        } else if (!obj.is_success && !obj.status) {
+                            existingItem.callFail++;
+                        }
                         existingItem.call++;
                     } else {
-                        const newItem = { name: momentToStringDate(date), call: 1 };
+                        const newItem = {
+                            name: momentToStringDate(date),
+                            call: 1,
+                            callSuccess: obj.is_success ? 1 : 0,
+                            callFail: !obj.is_success && !obj.status ? 1 : 0,
+                        };
                         acc.push(newItem);
                     }
 
@@ -76,7 +86,7 @@ const HomePage = () => {
         try {
             const { data, error } = await supabase
                 .from('room')
-                .select(`created_at`)
+                .select(`created_at, is_success, status`)
                 .gte('created_at', startOfToday)
                 .lte('created_at', endOfTodayString)
                 .order('created_at', { ascending: true });
@@ -88,16 +98,37 @@ const HomePage = () => {
                     const timeRange = `${hour}h-${nextHour}h`;
 
                     if (acc[timeRange]) {
-                        acc[timeRange]++;
+                        acc[timeRange].total++;
+                        if (obj.is_success) {
+                            acc[timeRange].success++;
+                        } else if (!obj.is_success && !obj.status) {
+                            acc[timeRange].fail++;
+                        } else if (!obj.is_success && obj.status) {
+                            acc[timeRange].process++;
+                        }
                     } else {
-                        acc[timeRange] = 1;
+                        if (obj.is_success) {
+                            acc[timeRange] = { total: 1, success: 1, fail: 0, process: 0 };
+                        } else if (!obj.is_success && !obj.status) {
+                            acc[timeRange] = { total: 1, success: 0, fail: 1, process: 0 };
+                        } else if (!obj.is_success && obj.status) {
+                            acc[timeRange] = { total: 1, success: 0, fail: 0, process: 1 };
+                        }
                     }
 
                     return acc;
                 }, []);
 
+                console.log('result', result);
+
                 const dataChart = Object.keys(result).map((timeRange) => {
-                    return { name: timeRange, call: result[timeRange] };
+                    return {
+                        name: timeRange,
+                        call: result[timeRange].total,
+                        callSuccess: result[timeRange].success,
+                        callFail: result[timeRange].fail,
+                        callProcess: result[timeRange].process,
+                    };
                 });
                 dataChartTodayRef.current = dataChart;
                 setDataChartToday(dataChart);
@@ -121,7 +152,7 @@ const HomePage = () => {
             const { data, error, count } = await supabase
                 .from('room')
                 .select(
-                    `id, room, status, user, is_occupied, video, created_at, updated_at,
+                    `id, room, status, user, is_occupied, video, created_at, updated_at,is_success,
                 agency(id, name)`,
                     { count: 'exact' }
                 )
@@ -141,6 +172,7 @@ const HomePage = () => {
                         ...item,
                         reciever: item.agency ? item.agency?.name.toString() : '',
                         updated_at: !item.status ? item.updated_at : '',
+                        statusVKYC: item.is_success ? 1 : !item.is_success && !item.status ? 2 : 0,
                     };
                 });
                 totalRef.current = count ? count : 0;
@@ -232,7 +264,14 @@ const HomePage = () => {
     };
 
     const handleDataChanged = async (payload: {
-        new: { id: number; created_at: string; agency_id: number; status: boolean; updated_at: string };
+        new: {
+            id: number;
+            created_at: string;
+            agency_id: number;
+            status: boolean;
+            updated_at: string;
+            is_success: boolean;
+        };
         eventType: string;
     }) => {
         console.log(payload);
@@ -240,6 +279,7 @@ const HomePage = () => {
             ...payload.new,
             reciever: payload.new.agency_id ? findNameAgency(payload.new.agency_id) : '',
             updated_at: !payload.new.status ? payload.new.updated_at : '',
+            statusVKYC: payload.new.is_success ? 1 : !payload.new.is_success && !payload.new.status ? 2 : 0,
         };
 
         if (payload.eventType === 'INSERT') {
@@ -303,20 +343,17 @@ const HomePage = () => {
 
             <div className="gx-m-0 row_home gx-mt-3 gx-mb-5 " style={{ display: 'flex' }}>
                 <div className="home_left" style={{ flex: 1, height: '100%', marginRight: 20 }}>
-                    <ChartReport type="all" data={dataChartAll} label="Tổng số cuộc gọi" />
+                    <ChartReport type="total" data={dataChartAll} label="Biển đồ tổng số cuộc gọi" />
+                </div>
+            </div>
+
+            <div className="gx-m-0 row_home gx-mt-3 gx-mb-5 " style={{ display: 'flex' }}>
+                <div className="home_left" style={{ flex: 1, height: '100%', marginRight: 20 }}>
+                    <ChartReport data={dataChartAll} label="Biểu đồ trạng thái cuộc gọi" />
                 </div>
                 <div className="home_left" style={{ flex: 1, height: '100%' }}>
-                    <ChartReport type="today" data={dataChartToday} label="Số cuộc gọi hôm nay" />
+                    <ChartReport type="today" data={dataChartToday} label="Biểu đồ trạng thái cuộc gọi hôm nay" />
                 </div>
-
-                {/* <div
-                    className="home_right"
-                    style={{ width: 'min-content', display: 'flex', flexDirection: 'column', marginLeft: '20px' }}
-                >
-                    <div className="date_picker">
-                        <DatepickerFilter handleChangeDate={handleChangeDate} dateFilter={dateFilter} />
-                    </div>
-                </div> */}
             </div>
 
             <CardComponent title="Cuộc gọi VKYC gần nhất">

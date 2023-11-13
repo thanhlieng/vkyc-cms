@@ -113,10 +113,19 @@ export const columns = (page: number): ColumnsType<DataTypeCustomer> => [
         dataIndex: 'status',
         align: 'center',
         render: (value: boolean) =>
-            !value ? (
-                <TagResult text="Đã kết thúc" color="success" />
-            ) : (
+            !value ? <TagResult text="Đã đóng" color="success" /> : <TagResult text="Đang mở" color="processing" />,
+    },
+    {
+        title: 'Trạng thái VKYC',
+        dataIndex: 'statusVKYC',
+        align: 'center',
+        render: (value: number) =>
+            value == 0 ? (
                 <TagResult text="Đang diễn ra" color="processing" />
+            ) : value == 1 ? (
+                <TagResult text="Thành công" color="success" />
+            ) : (
+                <TagResult text="Thất bại" color="error" />
             ),
     },
 ];
