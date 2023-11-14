@@ -5,10 +5,12 @@ import { supabase } from '@/supabaseClient';
 import { Notification, momentToStringDate } from '@/utils';
 import { Col, Row, Tooltip as TooltipAntd } from 'antd';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { columns } from '../../call-manager/components/Customer.Config';
+import BarChartReport from '../components/BarChartReport';
 import ChartReport from '../components/ChartReport';
-import { useNavigate } from 'react-router-dom';
+import AreaChartReport from '../components/AreaChartReport';
 const textReportStyle: any = {
     color: '#fff',
     fontWeight: 'bold',
@@ -213,13 +215,18 @@ const HomePage = () => {
         if (existingItemChartAll) {
             existingItemChartAll.call += 1;
         } else {
-            newDataChartAll.push({ name: momentToStringDate(payload.new.created_at), call: 1 });
+            newDataChartAll.push({
+                name: momentToStringDate(payload.new.created_at),
+                call: 1,
+                callSuccess: 0,
+                callFail: 0,
+            });
         }
         dataChartAllRef.current = newDataChartAll;
         setDataChartAll(newDataChartAll);
     };
 
-    const handleRealtimeChartToday = (payload: { new: { created_at: string } }) => {
+    const handleRealtimeChartToday = (payload: { new: { created_at: string; is_success: boolean } }) => {
         if (new Date(payload.new.created_at).toDateString() === new Date().toDateString()) {
             const hour = momentToStringDate(payload.new.created_at, 'time').split(':')[0];
             const nextHour = String(Number(hour) + 1).padStart(2, '0');
@@ -228,8 +235,9 @@ const HomePage = () => {
             const existingItemChartAll = newDataChartToday.find((item: { name: any }) => item.name === timeRange);
             if (existingItemChartAll) {
                 existingItemChartAll.call += 1;
+                existingItemChartAll.callProcess += 1;
             } else {
-                newDataChartToday.push({ name: timeRange, call: 1 });
+                newDataChartToday.push({ name: timeRange, call: 1, callSuccess: 0, callFail: 0, callProcess: 1 });
             }
             dataChartTodayRef.current = newDataChartToday;
             setDataChartToday(newDataChartToday);
@@ -343,13 +351,13 @@ const HomePage = () => {
 
             <div className="gx-m-0 row_home gx-mt-3 gx-mb-5 " style={{ display: 'flex' }}>
                 <div className="home_left" style={{ flex: 1, height: '100%', marginRight: 20 }}>
-                    <ChartReport type="total" data={dataChartAll} label="Biển đồ tổng số cuộc gọi" />
+                    <BarChartReport data={dataChartAll} label="Biển đồ tổng số cuộc gọi" />
                 </div>
             </div>
 
             <div className="gx-m-0 row_home gx-mt-3 gx-mb-5 " style={{ display: 'flex' }}>
                 <div className="home_left" style={{ flex: 1, height: '100%', marginRight: 20 }}>
-                    <ChartReport data={dataChartAll} label="Biểu đồ trạng thái cuộc gọi" />
+                    <AreaChartReport data={dataChartAll} label="Biểu đồ trạng thái cuộc gọi" />
                 </div>
                 <div className="home_left" style={{ flex: 1, height: '100%' }}>
                     <ChartReport type="today" data={dataChartToday} label="Biểu đồ trạng thái cuộc gọi hôm nay" />

@@ -1,7 +1,6 @@
 import { BOX_SHADOW, RADIUS } from '@/config/theme';
-import { Col, Row, Tooltip as TooltipAntd } from 'antd';
+import { Col, Row } from 'antd';
 import React from 'react';
-import CountUp from 'react-countup';
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import styled from 'styled-components';
 
@@ -10,7 +9,7 @@ const ChartReport = (props: { data: any[]; label: string; type?: string }) => {
         <ReportChartStyled>
             <div style={{ margin: 10, marginBottom: 20, fontWeight: 'bold', alignSelf: 'center' }}>{props.label}</div>
             <BoxChart style={{ minHeight: '400px' }}>
-                <ResponsiveContainer>
+                <ResponsiveContainer width="100%" height="100%">
                     <LineChart
                         width={500}
                         height={300}
@@ -27,43 +26,35 @@ const ChartReport = (props: { data: any[]; label: string; type?: string }) => {
                         <YAxis />
                         <Tooltip />
                         <Legend />
-                        {/* <Line type="monotone" dataKey="call" stroke={'#8884d8'} strokeWidth={2} name="Cuộc gọi" /> */}
-                        {props.type === 'total' ? (
+                        {/* {props.type === 'total' ? (
+                            <Line type="monotone" dataKey="call" stroke={'#5bc0de'} strokeWidth={2} name="Cuộc gọi" />
+                        ) : ( */}
+                        <>
+                            {props.type === 'today' && (
+                                <Line
+                                    type="monotone"
+                                    dataKey="callProcess"
+                                    stroke={'#5bc0de'}
+                                    strokeWidth={2}
+                                    name="Cuộc gọi đang diễn ra"
+                                />
+                            )}
                             <Line
                                 type="monotone"
-                                dataKey="call"
-                                stroke={'#5bc0de'}
+                                dataKey="callSuccess"
+                                stroke={'#22bb33'}
                                 strokeWidth={2}
                                 name="Cuộc gọi thành công"
                             />
-                        ) : (
-                            <>
-                                {props.type === 'today' && (
-                                    <Line
-                                        type="monotone"
-                                        dataKey="callProcess"
-                                        stroke={'#5bc0de'}
-                                        strokeWidth={2}
-                                        name="Cuộc gọi đang diễn ra"
-                                    />
-                                )}
-
-                                <Line
-                                    type="monotone"
-                                    dataKey="callSuccess"
-                                    stroke={'#22bb33'}
-                                    strokeWidth={2}
-                                    name="Cuộc gọi thành công"
-                                />
-                                <Line
-                                    type="monotone"
-                                    dataKey="callFail"
-                                    stroke={'#bb2124'}
-                                    strokeWidth={2}
-                                    name="Cuộc gọi thất bại"
-                                />
-                            </>
-                        )}
+                            <Line
+                                type="monotone"
+                                dataKey="callFail"
+                                stroke={'#bb2124'}
+                                strokeWidth={2}
+                                name="Cuộc gọi thất bại"
+                            />
+                        </>
+                        {/* )} */}
                     </LineChart>
                 </ResponsiveContainer>
             </BoxChart>

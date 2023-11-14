@@ -40,7 +40,7 @@
     "react-sortable-hoc": "^2.0.0",
     "react-spinners": "^0.13.4",
     "react-to-print": "^2.14.8",
-    "recharts": "^2.1.14",
+    "recharts": "^2.9.3",
     "socket.io-client": "^4.5.3",
     "styled-components": "^5.3.5"
   },

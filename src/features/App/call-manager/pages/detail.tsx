@@ -366,7 +366,9 @@ const CallDetailPage = () => {
                                     },
                                 });
                                 setIsLoading(false);
-                            } catch (error) {}
+                            } catch (error) {
+                                setIsLoading(false);
+                            }
 
                             break;
                         case 'back_image':
@@ -377,7 +379,9 @@ const CallDetailPage = () => {
                                     },
                                 });
                                 setIsLoading(false);
-                            } catch (error) {}
+                            } catch (error) {
+                                setIsLoading(false);
+                            }
 
                             break;
                         case 'portrait_image':
@@ -389,6 +393,7 @@ const CallDetailPage = () => {
                                 });
                                 setIsLoading(false);
                             } catch (error) {
+                                setIsLoading(false);
                                 console.log('error', error);
                             }
 
