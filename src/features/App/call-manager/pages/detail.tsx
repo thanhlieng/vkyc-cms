@@ -137,7 +137,7 @@ const CallDetailPage = () => {
                     setDescription(dataOcrFront.response.error);
                 }
 
-                if (dataOcrFront.response.output) {
+                if (dataOcrFront.response.output && !dataOcrFront.response.error) {
                     const resultOcrFront = dataOcrFront.response.output;
                     form.setFieldsValue({
                         name: resultOcrFront.name,
@@ -155,7 +155,7 @@ const CallDetailPage = () => {
                     });
                     frontImageRef.current = `https://api-vkyc.mascom.vn/file/${dataOcrFront.image}`;
                 }
-                if (dataOcrBack.response.output) {
+                if (dataOcrBack.response.output && !dataOcrBack.response.error) {
                     const resultOcrBack = dataOcrBack.response.output;
                     form.setFieldsValue({
                         issueDate: resultOcrBack.card_issued_date_normalized,
@@ -244,7 +244,7 @@ const CallDetailPage = () => {
                     });
                     frontImageRef.current = `https://api-vkyc.mascom.vn/file/${payload.new.image}`;
                 }
-                if (payload.new.response.output) {
+                if (payload.new.response.output && !payload.new.response.error) {
                     form.setFieldsValue({
                         name: payload.new.response.output.name,
                         birthday: payload.new.response.output.card_date_of_birth_normalized,
@@ -279,7 +279,7 @@ const CallDetailPage = () => {
                     });
                     backImageRef.current = `https://api-vkyc.mascom.vn/file/${payload.new.image}`;
                 }
-                if (payload.new.response.output) {
+                if (payload.new.response.output && !payload.new.response.error) {
                     form.setFieldsValue({
                         issueDate: payload.new.response.output.card_issued_date_normalized,
                         issueAddress: payload.new.response.output.card_place_of_issue,

@@ -2,10 +2,10 @@
 
 # dependencies
 /GUTHUB
-/GITMASCOM
 /node_modules
 /.pnp
 .pnp.js
+/GITMASCOM
 
 # testing
 /coverage
