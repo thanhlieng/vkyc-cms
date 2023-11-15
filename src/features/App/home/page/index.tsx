@@ -45,7 +45,9 @@ const HomePage = () => {
             if (data && data.length > 0) {
                 const dataChart = data.reduce((acc: any, obj) => {
                     const date = obj.created_at;
-                    const existingItem = acc.find((item: { name: string }) => item.name === momentToStringDate(date));
+                    const existingItem = acc.find(
+                        (item: { name: string }) => item.name === momentToStringDate(date, 'daymonth')
+                    );
 
                     if (existingItem) {
                         if (obj.is_success) {
@@ -56,7 +58,7 @@ const HomePage = () => {
                         existingItem.call++;
                     } else {
                         const newItem = {
-                            name: momentToStringDate(date),
+                            name: momentToStringDate(date, 'daymonth'),
                             call: 1,
                             callSuccess: obj.is_success ? 1 : 0,
                             callFail: !obj.is_success && !obj.status ? 1 : 0,
@@ -93,55 +95,22 @@ const HomePage = () => {
                 .lte('created_at', endOfTodayString)
                 .order('created_at', { ascending: true });
 
-            if (data && data.length > 0) {
-                const result = data.reduce((acc: any, obj) => {
-                    const hour = momentToStringDate(obj.created_at, 'time').split(':')[0];
-                    const nextHour = String(Number(hour) + 1).padStart(2, '0');
-                    const timeRange = `${hour}h-${nextHour}h`;
+            const dataSuccess = data?.filter((item) => item.is_success);
+            const dataFail = data?.filter((item) => !item.is_success && !item.status);
+            const dataProcess = data?.filter((item) => !item.is_success && item.status);
 
-                    if (acc[timeRange]) {
-                        acc[timeRange].total++;
-                        if (obj.is_success) {
-                            acc[timeRange].success++;
-                        } else if (!obj.is_success && !obj.status) {
-                            acc[timeRange].fail++;
-                        } else if (!obj.is_success && obj.status) {
-                            acc[timeRange].process++;
-                        }
-                    } else {
-                        if (obj.is_success) {
-                            acc[timeRange] = { total: 1, success: 1, fail: 0, process: 0 };
-                        } else if (!obj.is_success && !obj.status) {
-                            acc[timeRange] = { total: 1, success: 0, fail: 1, process: 0 };
-                        } else if (!obj.is_success && obj.status) {
-                            acc[timeRange] = { total: 1, success: 0, fail: 0, process: 1 };
-                        }
-                    }
+            console.log('aloo', dataSuccess?.length, dataFail?.length, dataProcess?.length);
 
-                    return acc;
-                }, []);
-
-                console.log('result', result);
-
-                const dataChart = Object.keys(result).map((timeRange) => {
-                    return {
-                        name: timeRange,
-                        call: result[timeRange].total,
-                        callSuccess: result[timeRange].success,
-                        callFail: result[timeRange].fail,
-                        callProcess: result[timeRange].process,
-                    };
-                });
-                dataChartTodayRef.current = dataChart;
-                setDataChartToday(dataChart);
-            } else {
-                dataChartTodayRef.current = [];
-                setDataChartToday([
-                    { name: '0h-1h', call: 0 },
-                    { name: '11h-12h', call: 0 },
-                    { name: '23h-24h', call: 0 },
-                ]);
-            }
+            setDataChartToday([
+                { name: 'Cuộc gọi thành công', value: dataSuccess?.length },
+                { name: 'Cuộc gọi thất bại', value: dataFail?.length },
+                { name: 'Cuộc gọi đang diễn ra', value: dataProcess?.length },
+            ]);
+            dataChartTodayRef.current = [
+                { name: 'Cuộc gọi thành công', value: dataSuccess?.length },
+                { name: 'Cuộc gọi thất bại', value: dataFail?.length },
+                { name: 'Cuộc gọi đang diễn ra', value: dataProcess?.length },
+            ];
             if (error) {
                 Notification('error', error);
             }
@@ -210,13 +179,13 @@ const HomePage = () => {
     const handleRealtimeChartAll = (payload: { new: any; eventType?: string }) => {
         const newDataChartAll = [...dataChartAllRef.current];
         const existingItemChartAll = newDataChartAll.find(
-            (item: { name: any }) => item.name === momentToStringDate(payload.new.created_at)
+            (item: { name: any }) => item.name === momentToStringDate(payload.new.created_at, 'daymonth')
         );
         if (existingItemChartAll) {
             existingItemChartAll.call += 1;
         } else {
             newDataChartAll.push({
-                name: momentToStringDate(payload.new.created_at),
+                name: momentToStringDate(payload.new.created_at, 'daymonth'),
                 call: 1,
                 callSuccess: 0,
                 callFail: 0,
@@ -228,17 +197,8 @@ const HomePage = () => {
 
     const handleRealtimeChartToday = (payload: { new: { created_at: string; is_success: boolean } }) => {
         if (new Date(payload.new.created_at).toDateString() === new Date().toDateString()) {
-            const hour = momentToStringDate(payload.new.created_at, 'time').split(':')[0];
-            const nextHour = String(Number(hour) + 1).padStart(2, '0');
-            const timeRange = `${hour}h-${nextHour}h`;
             const newDataChartToday = [...dataChartTodayRef.current];
-            const existingItemChartAll = newDataChartToday.find((item: { name: any }) => item.name === timeRange);
-            if (existingItemChartAll) {
-                existingItemChartAll.call += 1;
-                existingItemChartAll.callProcess += 1;
-            } else {
-                newDataChartToday.push({ name: timeRange, call: 1, callSuccess: 0, callFail: 0, callProcess: 1 });
-            }
+            newDataChartToday[2].value += 1;
             dataChartTodayRef.current = newDataChartToday;
             setDataChartToday(newDataChartToday);
         }
@@ -250,6 +210,45 @@ const HomePage = () => {
         newDataCall.pop();
         dataCallRef.current = newDataCall;
         setDataCall(newDataCall);
+    };
+
+    const handleUpdateDataChartAll = (payload: { new: any }) => {
+        const newDataChartAll = [...dataChartAllRef.current];
+        const existingItemChartAll = newDataChartAll.find(
+            (item: { name: any }) => item.name === momentToStringDate(payload.new.created_at, 'daymonth')
+        );
+        if (existingItemChartAll) {
+            if (payload.new.is_success) {
+                existingItemChartAll.callSuccess += 1;
+            } else if (!payload.new.is_success && !payload.new.status) {
+                existingItemChartAll.callFail += 1;
+            }
+        } else {
+            newDataChartAll.push({
+                name: momentToStringDate(payload.new.created_at, 'daymonth'),
+                call: 1,
+                callSuccess: 0,
+                callFail: 0,
+            });
+        }
+        dataChartAllRef.current = newDataChartAll;
+        setDataChartAll(newDataChartAll);
+    };
+
+    const handleUpdateDataChartToday = (payload: any) => {
+        if (new Date(payload.new.created_at).toDateString() === new Date().toDateString()) {
+            const newDataChartToday = [...dataChartTodayRef.current];
+            if (payload.new.is_success) {
+                newDataChartToday[0].value += 1;
+                newDataChartToday[2].value -= 1;
+            } else if (!payload.new.is_success && !payload.new.status) {
+                newDataChartToday[1].value += 1;
+                newDataChartToday[2].value -= 1;
+            }
+
+            dataChartTodayRef.current = newDataChartToday;
+            setDataChartToday(newDataChartToday);
+        }
     };
 
     const handleUpdateDateRealtime = (data: any, id: any) => {
@@ -304,6 +303,8 @@ const HomePage = () => {
         } else if (payload.eventType === 'UPDATE') {
             Notification('info', `Cuộc gọi ${payload.new.id} đã được cập nhật`);
             handleUpdateDateRealtime(newRow, payload.new.id);
+            handleUpdateDataChartToday(payload);
+            handleUpdateDataChartAll(payload);
         }
     };
 
@@ -359,8 +360,8 @@ const HomePage = () => {
                 <div className="home_left" style={{ flex: 1, height: '100%', marginRight: 20 }}>
                     <AreaChartReport data={dataChartAll} label="Biểu đồ trạng thái cuộc gọi" />
                 </div>
-                <div className="home_left" style={{ flex: 1, height: '100%' }}>
-                    <ChartReport type="today" data={dataChartToday} label="Biểu đồ trạng thái cuộc gọi hôm nay" />
+                <div className="home_right" style={{ flex: 1, height: '100%' }}>
+                    <ChartReport type="today" data={dataChartToday} label="Biểu đồ thống kê cuộc gọi hôm nay" />
                 </div>
             </div>
 

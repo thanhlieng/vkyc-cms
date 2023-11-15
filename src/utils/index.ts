@@ -22,11 +22,13 @@ export const Notification = (status: NotificationType, msg: any) => {
 export const momentToStringDate = (date: string | Date, type = 'date') => {
     switch (type) {
         case 'date':
-            return date ? moment(date).utc(true).format('DD/MM/YYYY') : '';
+            return date ? moment(date).utc(true).format('DD/MM') : '';
         case 'dateTime':
             return moment(date).utc(true).format('HH:mm DD/MM/YYYY');
         case 'time':
             return moment(date).utc(true).format('HH:mm');
+        case 'daymonth':
+            return date ? moment(date).utc(true).format('DD/MM') : '';
         default:
             return '';
     }

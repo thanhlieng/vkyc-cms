@@ -26,7 +26,7 @@ const BarChartReport = (props: { data: any[]; label: string; type?: string }) =>
                         <YAxis />
                         <Tooltip />
                         <Legend />
-                        <Bar dataKey="call" name="Tổng số cuộc gọi" fill="#5bc0de" />
+                        <Bar dataKey="call" stroke="#0088FE" name="Tổng số cuộc gọi" fill="#0088FE" />
                     </BarChart>
                 </ResponsiveContainer>
             </BoxChart>

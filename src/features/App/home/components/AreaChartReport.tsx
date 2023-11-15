@@ -42,16 +42,16 @@ const AreaChartReport = (props: { data: any[]; label: string; type?: string }) =
                             name="Cuộc gọi thành công"
                             dataKey="callSuccess"
                             stackId="1"
-                            stroke="#22bb33"
-                            fill="#22bb33"
+                            stroke="#00C49F"
+                            fill="#00C49F"
                         />
                         <Area
                             type="monotone"
                             name="Cuộc gọi thất bại"
                             dataKey="callFail"
                             stackId="1"
-                            stroke="#bb2124"
-                            fill="#bb2124"
+                            stroke="#FFBB28"
+                            fill="#FFBB28"
                         />
                     </AreaChart>
                 </ResponsiveContainer>

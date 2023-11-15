@@ -1,61 +1,124 @@
 import { BOX_SHADOW, RADIUS } from '@/config/theme';
-import { Col, Row } from 'antd';
-import React from 'react';
-import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import React, { useState } from 'react';
+import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Sector } from 'recharts';
 import styled from 'styled-components';
 
+const data = [
+    { name: 'Group A', value: 400 },
+    { name: 'Group B', value: 300 },
+    { name: 'Group C', value: 300 },
+    { name: 'Group D', value: 200 },
+];
+const COLORS = ['#00C49F', '#FFBB28', '#0088FE'];
+
+const renderActiveShape = (props: {
+    cx: any;
+    cy: any;
+    midAngle: any;
+    innerRadius: any;
+    outerRadius: any;
+    startAngle: any;
+    endAngle: any;
+    fill: any;
+    payload: any;
+    percent: any;
+    value: any;
+}) => {
+    const RADIAN = Math.PI / 180;
+    const { cx, cy, midAngle, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent, value } = props;
+    const sin = Math.sin(-RADIAN * midAngle);
+    const cos = Math.cos(-RADIAN * midAngle);
+    const sx = cx + (outerRadius + 10) * cos;
+    const sy = cy + (outerRadius + 10) * sin;
+    const mx = cx + (outerRadius + 30) * cos;
+    const my = cy + (outerRadius + 30) * sin;
+    const ex = mx + (cos >= 0 ? 1 : -1) * 22;
+    const ey = my;
+    const textAnchor = cos >= 0 ? 'start' : 'end';
+
+    return (
+        <g>
+            <text x={cx} y={cy} dy={8} textAnchor="middle" fill={fill}>
+                {payload.name}
+            </text>
+            <Sector
+                cx={cx}
+                cy={cy}
+                innerRadius={innerRadius}
+                outerRadius={outerRadius}
+                startAngle={startAngle}
+                endAngle={endAngle}
+                fill={fill}
+            />
+            <Sector
+                cx={cx}
+                cy={cy}
+                startAngle={startAngle}
+                endAngle={endAngle}
+                innerRadius={outerRadius + 6}
+                outerRadius={outerRadius + 10}
+                fill={fill}
+            />
+            <path d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`} stroke={fill} fill="none" />
+            <circle cx={ex} cy={ey} r={2} fill={fill} stroke="none" />
+            <text
+                style={{ fontSize: 13 }}
+                x={ex + (cos >= 0 ? 1 : -1) * 12}
+                y={ey}
+                textAnchor={textAnchor}
+                fill="#333"
+            >{`PV ${value}`}</text>
+            <text
+                style={{ fontSize: 14 }}
+                x={ex + (cos >= 0 ? 1 : -1) * 12}
+                y={ey}
+                dy={18}
+                textAnchor={textAnchor}
+                fill="#999"
+            >
+                {`(${(percent * 100).toFixed(2)}%)`}
+            </text>
+        </g>
+    );
+};
+
 const ChartReport = (props: { data: any[]; label: string; type?: string }) => {
+    const [activeIndex, setActiveIndex] = useState(1);
+
+    const onPieEnter = (_: any, index: any) => {
+        setActiveIndex(index);
+    };
     return (
         <ReportChartStyled>
             <div style={{ margin: 10, marginBottom: 20, fontWeight: 'bold', alignSelf: 'center' }}>{props.label}</div>
             <BoxChart style={{ minHeight: '400px' }}>
                 <ResponsiveContainer width="100%" height="100%">
-                    <LineChart
-                        width={500}
-                        height={300}
-                        data={props.data}
-                        margin={{
-                            top: 5,
-                            right: 30,
-                            left: 20,
-                            bottom: 5,
+                    <PieChart
+                        style={{
+                            alignItems: 'center',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'center',
                         }}
                     >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis />
-                        <Tooltip />
+                        <Pie
+                            activeIndex={activeIndex}
+                            activeShape={renderActiveShape}
+                            data={props.data}
+                            innerRadius={90}
+                            outerRadius={125}
+                            fill="#8884d8"
+                            paddingAngle={2}
+                            dataKey="value"
+                            onMouseEnter={onPieEnter}
+                        >
+                            {data.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                        </Pie>
+
                         <Legend />
-                        {/* {props.type === 'total' ? (
-                            <Line type="monotone" dataKey="call" stroke={'#5bc0de'} strokeWidth={2} name="Cuộc gọi" />
-                        ) : ( */}
-                        <>
-                            {props.type === 'today' && (
-                                <Line
-                                    type="monotone"
-                                    dataKey="callProcess"
-                                    stroke={'#5bc0de'}
-                                    strokeWidth={2}
-                                    name="Cuộc gọi đang diễn ra"
-                                />
-                            )}
-                            <Line
-                                type="monotone"
-                                dataKey="callSuccess"
-                                stroke={'#22bb33'}
-                                strokeWidth={2}
-                                name="Cuộc gọi thành công"
-                            />
-                            <Line
-                                type="monotone"
-                                dataKey="callFail"
-                                stroke={'#bb2124'}
-                                strokeWidth={2}
-                                name="Cuộc gọi thất bại"
-                            />
-                        </>
-                        {/* )} */}
-                    </LineChart>
+                    </PieChart>
                 </ResponsiveContainer>
             </BoxChart>
             {/* </div> */}
@@ -72,44 +135,6 @@ const ReportChartStyled = styled.div`
     box-shadow: ${BOX_SHADOW};
     background-color: white;
     border-radius: ${RADIUS};
-`;
-
-const TopBoxStyled = styled.div`
-    background-color: #fff;
-    box-shadow: ${BOX_SHADOW};
-    padding: 20px;
-    border-radius: ${RADIUS};
-`;
-
-const RowStyled = styled(Row)`
-    padding: 0 40px;
-    margin: 30px 0;
-`;
-
-const ColStyled = styled(Col)<{ color?: string; index?: number }>`
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    /* border: 2px solid ${(props) => (props.color ? props.color : '#ccc')}; */
-    padding: 14px 0;
-    border-radius: ${RADIUS};
-    position: relative;
-    box-shadow: ${BOX_SHADOW};
-    ${(props) =>
-        props?.index === 1 &&
-        'background-color: #0093E9;background-image: linear-gradient(160deg, #0093E9 0%, #80D0C7 100%);'};
-    ${(props) => props?.index === 2 && 'background: linear-gradient(33deg, #DEB0DF, #A16BFE);'};
-
-    ${(props) => props?.index === 3 && 'background: linear-gradient(33deg, #54E38E, #41C7AF);'};
-    ${(props) => props?.index === 4 && 'background: linear-gradient(33deg, #E16E93, #9D2E7D);'};
-`;
-
-const TitleColStyled = styled.div`
-    position: absolute;
-    top: -10px;
-    background-color: white;
-    padding: 0 20px;
-    font-weight: bold;
 `;
 
 const BoxChart = styled.div``;

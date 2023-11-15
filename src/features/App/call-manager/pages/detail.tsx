@@ -21,6 +21,7 @@ import {
     useCreateLayoutContext,
     useParticipants,
     usePinnedTracks,
+    useRemoteParticipants,
     useRoomContext,
     useTracks,
 } from '@livekit/components-react';
@@ -57,7 +58,7 @@ const CallDetailPage = () => {
     const [description, setDescription] = useState('');
     const [isLivestream, setIsLiveStream] = useState(location.state.status);
     const [isDisplayLiveStream, setIsDisplayLiveStream] = useState(false);
-    const [isDisplayVideo, setIsDisplayVideo] = useState(false);
+    const [isDisplayVideo, setIsDisplayVideo] = useState(!location.state.status ? true : false);
     const [isLoading, setIsLoading] = useState(true);
     const [urlVideo, setUrlVideo] = useState(location.state.video ? location.state.video : '');
     const [token, setToken] = useState('');
@@ -911,8 +912,10 @@ const MyVideoConference = ({ setIsLiveStream }: { setIsLiveStream: Dispatch<SetS
         ],
         { onlySubscribed: false }
     );
-
-    const focusTrack = usePinnedTracks(layoutContext)?.[0];
+    const trackReferences = useTracks([Track.Source.Camera]);
+    const trackRemote = trackReferences.find((item) => !item.participant.identity.includes('Agency'));
+    const focusTrack = trackRemote;
+    //const focusTrack = trackReferences[0];
     const carouselTracks = tracks.filter((track) => !isEqualTrackRef(track, focusTrack));
 
     useEffect(() => {
@@ -924,6 +927,8 @@ const MyVideoConference = ({ setIsLiveStream }: { setIsLiveStream: Dispatch<SetS
             setIsLiveStream(false);
         }
     }, [num.length]);
+
+    console.log('layoutContext', trackRemote);
 
     return (
         <LayoutContextProvider value={layoutContext}>
@@ -937,7 +942,7 @@ const MyVideoConference = ({ setIsLiveStream }: { setIsLiveStream: Dispatch<SetS
                         <CarouselLayout tracks={carouselTracks}>
                             <ParticipantTile />
                         </CarouselLayout>
-                        {focusTrack && <FocusLayout track={focusTrack} />}
+                        {focusTrack && <FocusLayout trackRef={focusTrack} />}
                     </FocusLayoutContainer>
                 </div>
             )}
